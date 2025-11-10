@@ -1,0 +1,32 @@
+using UnityEngine;
+using UnityEditor;
+
+public class RemoveCollidersFromSelection
+{
+    [MenuItem("Ferramentas/Remover Colisores dos Selecionados")]
+    static void RemoveColliders()
+    {
+        GameObject[] selectedObjects = Selection.gameObjects;
+
+        if (selectedObjects.Length == 0)
+        {
+            Debug.LogWarning("Nenhum objeto selecionado.");
+            return;
+        }
+
+        int total = 0;
+
+        foreach (GameObject obj in selectedObjects)
+        {
+            Collider[] colliders = obj.GetComponentsInChildren<Collider>(true);
+
+            foreach (Collider col in colliders)
+            {
+                Undo.DestroyObjectImmediate(col); // permite desfazer com Ctrl+Z
+                total++;
+            }
+        }
+
+        Debug.Log($"Removidos {total} colisores em {selectedObjects.Length} objetos.");
+    }
+}
