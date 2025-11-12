@@ -1,0 +1,91 @@
+using UnityEngine;
+using UnityEditor;
+using System.Collections.Generic;
+
+public class ApplyMaterialToSelected : EditorWindow
+{
+    private List<Material> materialsToApply = new List<Material>();
+    private Vector2 scrollPos;
+
+    [MenuItem("Ferramentas/Aplicar Materiais aos Selecionados")]
+    public static void ShowWindow()
+    {
+        GetWindow<ApplyMaterialToSelected>("Aplicar Materiais");
+    }
+
+    void OnGUI()
+    {
+        GUILayout.Label("Selecionar Materiais", EditorStyles.boldLabel);
+
+        // Lista de materiais com rolagem
+        scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(120));
+        for (int i = 0; i < materialsToApply.Count; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+            materialsToApply[i] = (Material)EditorGUILayout.ObjectField($"Material {i + 1}", materialsToApply[i], typeof(Material), false);
+            if (GUILayout.Button("X", GUILayout.Width(20)))
+            {
+                materialsToApply.RemoveAt(i);
+                GUI.FocusControl(null);
+                break;
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+        EditorGUILayout.EndScrollView();
+
+        if (GUILayout.Button("Adicionar Material"))
+        {
+            materialsToApply.Add(null);
+        }
+
+        GUILayout.Space(10);
+
+        if (GUILayout.Button("Aplicar aos Selecionados"))
+        {
+            ApplyMaterials();
+        }
+    }
+
+    void ApplyMaterials()
+    {
+        if (materialsToApply.Count == 0)
+        {
+            Debug.LogWarning("Nenhum material selecionado.");
+            return;
+        }
+
+        GameObject[] selectedObjects = Selection.gameObjects;
+        if (selectedObjects.Length == 0)
+        {
+            Debug.LogWarning("Nenhum objeto selecionado na cena.");
+            return;
+        }
+
+        int total = 0;
+        int materialsApplied = 0;
+
+        foreach (GameObject obj in selectedObjects)
+        {
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>(true);
+
+            foreach (Renderer rend in renderers)
+            {
+                Undo.RecordObject(rend, "Aplicar Materiais");
+
+                // Garante que o número de slots de material seja igual ao número de materiais escolhidos
+                Material[] mats = new Material[materialsToApply.Count];
+                for (int i = 0; i < materialsToApply.Count; i++)
+                {
+                    mats[i] = materialsToApply[i];
+                    if (materialsToApply[i] != null)
+                        materialsApplied++;
+                }
+
+                rend.sharedMaterials = mats;
+                total++;
+            }
+        }
+
+        Debug.Log($"Aplicados {materialsToApply.Count} materiais a {total} renderizadores. ({materialsApplied} materiais válidos)");
+    }
+}
