@@ -1,0 +1,57 @@
+using UdonSharp;
+using UnityEngine;
+using TMPro;
+using VRC.SDKBase;
+using VRC.Udon;
+
+public class TagSearch : UdonSharpBehaviour
+{
+    public TMP_InputField inputField;  // Campo onde digita a tag
+    public TMP_Text resultText;        // Local para mostrar o resultado
+
+    public void OnSearch()
+    {
+        string tagToFind = inputField.text;
+
+        // Procura objetos com essa tag
+        GameObject[] objects = GameObject.FindGameObjectsWithTag(tagToFind);
+
+        if (objects.Length == 0)
+        {
+            resultText.text = "Nenhum objeto encontrado com a tag: " + tagToFind;
+            return;
+        }
+
+        GameObject obj = objects[0];
+
+        // Exemplo de texto associado à tag
+        string info = GetInfoForTag(tagToFind);
+        resultText.text = info;
+
+        // Pinta o objeto de verde
+        Renderer renderer = obj.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.material.color = Color.green;
+        }
+    }
+
+    // Informações personalizadas por tag
+    private string GetInfoForTag(string tag)
+    {
+        switch (tag)
+        {
+            case "box":
+                return "Prateleira A2, Andar F, número 04";
+
+            case "item1":
+                return "Armazém B4, Andar D, número 12";
+
+            case "item2":
+                return "Corredor C1, Prateleira E, número 07";
+
+            default:
+                return "Tag encontrada, mas não possui informações cadastradas.";
+        }
+    }
+}
